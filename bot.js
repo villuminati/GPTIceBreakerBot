@@ -4,8 +4,12 @@ import {
 	GatewayIntentBits,
 	ThreadAutoArchiveDuration,
 	ChannelType,
+	ThreadChannel,
 } from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
+
+const welcomeChannelId = "1079360210981900313";
+const botName = "GPTIceBreakerBot";
 
 function init() {
 	dotenv.config();
@@ -27,6 +31,7 @@ function init() {
 	return [client, openai];
 }
 
+// Get response to direct message in channel (i.e. message not in thread)
 async function getResonspeFromChatGPT(message, openai) {
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
@@ -43,8 +48,20 @@ async function getResonspeFromChatGPT(message, openai) {
 	return content;
 }
 
+// Get response to message in thread.
+async function getResonspeFromChatGPTForThread(
+	conversationHistoryInGPTAPIFormat,
+	openai
+) {
+	const response = await openai.createChatCompletion({
+		model: "gpt-3.5-turbo",
+		messages: conversationHistoryInGPTAPIForma,
+	});
+	const content = response.data.choices[0].message;
+	return content;
+}
+
 async function isMessageInWelcomeChannel(client, message) {
-	const welcomeChannelId = "1079360210981900313";
 	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 
 	// if message in a channel (i.e. not in thread)
@@ -71,6 +88,52 @@ async function isMessageInWelcomeChannel(client, message) {
 	}
 }
 
+async function getConversationHistory(client, message) {
+	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
+	const parentMessageId = message.channel.id;
+
+	try {
+		const parentMessage = await welcomeChannel.messages.fetch(parentMessageId);
+		const thread = welcomeChannel.threads.cache.find(
+			(x) => x.id === parentMessageId
+		);
+		const messages = await thread.messages.fetch({ limit: 100 });
+		let messagesInGPTAPIFormat = [];
+
+		for (let [_, value] of messages) {
+			// Not sure why there is one message at the end with empty content
+			if (value.content === "") continue;
+			let role;
+			if (value.author.username === botName) {
+				role = "assistant";
+			} else if (value.author.username === parentMessage.author.username) {
+				role = "user";
+			} else {
+				//TODO: Add condition for 3rd party coming into the conversation
+			}
+			const newMessage = { role: role, content: value.content };
+			messagesInGPTAPIFormat.push(newMessage);
+		}
+
+		// Push the message that began the thread
+		messagesInGPTAPIFormat.push({
+			role: "user",
+			content: parentMessage.content,
+		});
+
+		// Push the system message required by OpenAI API
+		messagesInGPTAPIFormat.push({
+			role: "system",
+			content:
+				"You are a greeter that responds to introductory messages by responding warmly and with some  inquisitive questions. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that politely direct them to mingle in #general channel",
+		});
+
+		return messagesInGPTAPIFormat;
+	} catch (e) {
+		console.error(e);
+	}
+}
+
 function main() {
 	const [client, openai] = init();
 
@@ -94,7 +157,16 @@ function main() {
 				});
 				return discussThread.send(content);
 			} else if (message.channel.type === ChannelType.PublicThread) {
-				const content = await getResonspeFromChatGPT(message, openai);
+				// feed gpt conversation history
+				const conversationHistoryInGPTAPIFormat = await getConversationHistory(
+					client,
+					message
+				);
+
+				const content = await getResonspeFromChatGPTForThread(
+					conversationHistoryInGPTAPIFormat.reverse(),
+					openai
+				);
 
 				return message.reply(content);
 			}
