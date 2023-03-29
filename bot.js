@@ -23,7 +23,7 @@ async function getResonspeFromChatGPT(message, openai) {
 	return content;
 }
 
-function main() {
+function init() {
 	dotenv.config();
 
 	const client = new Client({
@@ -40,11 +40,51 @@ function main() {
 			apiKey: process.env.OPENAI_API_KEY,
 		})
 	);
+	return [client, openai];
+}
+
+async function isMessageInWelcomeChannel(client, message) {
+	const welcomeChannelId = "1079360210981900313";
+	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
+
+	// if message in a channel (i.e. not in thread)
+	if (message.channel.type === ChannelType.GuildText) {
+		if (message.channel.id === welcomeChannelId) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+	// if message in a thread
+	if (message.channel.type === ChannelType.PublicThread) {
+		const parentMessageId = message.channel.id;
+		try {
+			// this needs to in a try as if message not in welcomeChannel, this statement will throw an error
+			const parentMessage = await welcomeChannel.messages.fetch(
+				parentMessageId
+			);
+			if (parentMessage.channel.id === welcomeChannelId) return true;
+		} catch (e) {
+			// this message in thread but not in welcomeChannel
+			return false;
+		}
+	}
+}
+
+function main() {
+	const [client, openai] = init();
+
 	client.on("messageCreate", async function (message) {
 		if (message.author.bot) return;
+
+		// only respond to messages when they are from the welcome channel
+		if (!(await isMessageInWelcomeChannel(client, message))) {
+			console.log("Not in welcome channel ");
+			return;
+		}
+
 		try {
 			const content = await getResonspeFromChatGPT(message, openai);
-			// console.log({ message_channel_type: message.channel.type });
 			if (message.channel.type === ChannelType.GuildText) {
 				const discussThread = await message.startThread({
 					name: "Ice Breaker",
