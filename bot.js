@@ -55,7 +55,7 @@ async function getResonspeFromChatGPTForThread(
 ) {
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
-		messages: conversationHistoryInGPTAPIForma,
+		messages: conversationHistoryInGPTAPIFormat,
 	});
 	const content = response.data.choices[0].message;
 	return content;
