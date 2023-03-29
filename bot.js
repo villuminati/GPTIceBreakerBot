@@ -7,22 +7,6 @@ import {
 } from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
 
-async function getResonspeFromChatGPT(message, openai) {
-	const response = await openai.createChatCompletion({
-		model: "gpt-3.5-turbo",
-		messages: [
-			{
-				role: "system",
-				content:
-					"You are a greeter that responds to introductory messages by responding warmly and with some  inquisitive questions. Don't make it sound like an interview. Make it sound like conversation at a bar.",
-			},
-			{ role: "user", content: message.content },
-		],
-	});
-	const content = response.data.choices[0].message;
-	return content;
-}
-
 function init() {
 	dotenv.config();
 
@@ -41,6 +25,22 @@ function init() {
 		})
 	);
 	return [client, openai];
+}
+
+async function getResonspeFromChatGPT(message, openai) {
+	const response = await openai.createChatCompletion({
+		model: "gpt-3.5-turbo",
+		messages: [
+			{
+				role: "system",
+				content:
+					"You are a greeter that responds to introductory messages by responding warmly and with some  inquisitive questions. Don't make it sound like an interview. Make it sound like conversation at a bar.",
+			},
+			{ role: "user", content: message.content },
+		],
+	});
+	const content = response.data.choices[0].message;
+	return content;
 }
 
 async function isMessageInWelcomeChannel(client, message) {
@@ -84,8 +84,8 @@ function main() {
 		}
 
 		try {
-			const content = await getResonspeFromChatGPT(message, openai);
 			if (message.channel.type === ChannelType.GuildText) {
+				const content = await getResonspeFromChatGPT(message, openai);
 				const discussThread = await message.startThread({
 					name: "Ice Breaker",
 					type: "GUILD_PUBLIC_THREAD",
@@ -94,6 +94,8 @@ function main() {
 				});
 				return discussThread.send(content);
 			} else if (message.channel.type === ChannelType.PublicThread) {
+				const content = await getResonspeFromChatGPT(message, openai);
+
 				return message.reply(content);
 			}
 		} catch (err) {
