@@ -173,7 +173,7 @@ function main() {
 					name: "Ice Breaker",
 					type: "GUILD_PUBLIC_THREAD",
 					reason: "test",
-					autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+					autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
 				});
 				return discussThread.send(content);
 			} else if (message.channel.type === ChannelType.PublicThread) {
