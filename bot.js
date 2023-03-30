@@ -9,7 +9,7 @@ import {
 import { Configuration, OpenAIApi } from "openai";
 import express from "express";
 
-const welcomeChannelId = "1079360210981900313";
+const welcomeChannelId = "1080147198924296223";
 const botName = "GPTIceBreakerBot";
 
 function server() {
@@ -154,6 +154,10 @@ function main() {
 	const [client, openai] = init();
 
 	client.on("messageCreate", async function (message) {
+		console.log("Read message: " + message.content);
+		console.log("Author id: " + message.author);
+		console.log("Author username: " + message.author.username);
+
 		if (message.author.bot) return;
 
 		// only respond to messages when they are from the welcome channel
