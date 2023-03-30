@@ -14,7 +14,6 @@ const botName = "GPTIceBreakerBot";
 
 function server() {
 	const port = process.env.PORT;
-	console.log("port: ", port);
 	const app = express();
 	app.get("/", (req, res) => {
 		res.send("Bot is alive!");
