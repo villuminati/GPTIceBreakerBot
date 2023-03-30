@@ -153,7 +153,7 @@ function main() {
 	const [client, openai] = init();
 
 	client.on("messageCreate", async function (message) {
-		console.log("Read message: " + message.content);
+		console.log("Message received: " + message.content);
 		console.log("Author id: " + message.author);
 		console.log("Author username: " + message.author.username);
 
