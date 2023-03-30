@@ -1,6 +1,6 @@
 ## Instructions to run & contribute:
 
-**Step 1**: Clone this repo.
+**Step 1**: Clone this repo.  
 **Step 2**: Add `.env` file to root folder of project.  
 **Step 3**: Add `OPENAI_API_KEY`, `BOT_TOKEN` and `PORT` fields in `.env`.
 
