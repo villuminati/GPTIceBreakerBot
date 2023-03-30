@@ -7,9 +7,24 @@ import {
 	ThreadChannel,
 } from "discord.js";
 import { Configuration, OpenAIApi } from "openai";
+import express from "express";
 
 const welcomeChannelId = "1079360210981900313";
 const botName = "GPTIceBreakerBot";
+
+function server() {
+	const port = process.env.PORT;
+	console.log("port: ", port);
+	const app = express();
+	app.get("/", (req, res) => {
+		res.send("Bot is alive!");
+		console.log("Bot is alive!");
+	});
+
+	app.listen(port, () => {
+		console.log(`Example app listening on port ${port}`);
+	});
+}
 
 function init() {
 	dotenv.config();
@@ -28,6 +43,7 @@ function init() {
 			apiKey: process.env.OPENAI_API_KEY,
 		})
 	);
+	server();
 	return [client, openai];
 }
 
