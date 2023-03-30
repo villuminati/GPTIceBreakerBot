@@ -1,4 +1,4 @@
-## Instructions to run & contribute:
+## Instructions to run:
 
 **Step 1**: Clone this repo.  
 **Step 2**: Add `.env` file to root folder of project.  
@@ -26,3 +26,6 @@ PORT=ZZZZ
 npm i
 npm start
 ```
+## Instructions to contribute:
+
+Submit a PR and rebase onto master.
