@@ -1,8 +1,8 @@
-Instructions to run & contribute:
+## Instructions to run & contribute:
 
-Clone this repo.
-Add `.env` file to root folder of project.  
-Add `OPENAI_API_KEY`, `BOT_TOKEN` and `PORT` fields in `.env`.
+**Step 1**: Clone this repo.
+**Step 2**: Add `.env` file to root folder of project.  
+**Step 3**: Add `OPENAI_API_KEY`, `BOT_TOKEN` and `PORT` fields in `.env`.
 
 You will find `OPENAI_API_KEY` once you set up your account on openai's website and get access to their api.
 
@@ -20,7 +20,7 @@ PORT=ZZZZ
 
 ```
 
-Then run following from root of project:
+**Step 4**: Then run following from root of project:
 
 ```
 npm i
