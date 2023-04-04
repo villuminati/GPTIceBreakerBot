@@ -45,26 +45,13 @@ function init() {
 }
 
 // Get response to direct message in channel (i.e. message not in thread)
-async function getResonspeFromChatGPT(message, openai) {
+async function getResonspeFromChatGPTForFirstMessage(message, openai) {
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
 		messages: [
 			{
 				role: "system",
-				content: `You are a Discord bot for the Indian Tech Server. For the rest of this conversation, my messages will represent messages from a new user and you will respond to each.
-
-                Respond warmly and asking inquisitive questions about their life or career. Keep conversations light. Make it sound like conversation at a bar.
-                
-                Keep the conversation firmly focused on the user's life and career, and do not wander off the topic.  Keep your messages short and concise. Do not engage in creative writing exercises of any kind.
-                
-                Keep track of your response numbers. At the beginning of each response, note down your response number in this format:
-                
-                [RESPONSE 1]
-                [RESPONSE 2]
-                [RESPONSE 3]
-                
-                Do not ask any questions in RESPONSE 3. On RESPONSE 3, warmly but firmly encourage them to go to the '#general-discussion' channel (without quotes) and interact with other users. While writing RESPONSE 3, end the conversation politely.
-                `,
+				content: `You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.`,
 			},
 			{ role: "user", content: message.content },
 		],
@@ -73,11 +60,40 @@ async function getResonspeFromChatGPT(message, openai) {
 	return content;
 }
 
+function countMessagesFromUser(conversationHistoryInGPTAPIFormat) {
+	let userMessages = conversationHistoryInGPTAPIFormat.filter(
+		(c) => c.role === "user"
+	);
+	console.log({ userMessages, length: userMessages.length });
+	return userMessages.length;
+}
 // Get response to message in thread.
 async function getResonspeFromChatGPTForThread(
 	conversationHistoryInGPTAPIFormat,
 	openai
 ) {
+	const numberOfMessagesFromUser = countMessagesFromUser(
+		conversationHistoryInGPTAPIFormat
+	);
+	let systemPrompt =
+		"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.";
+
+	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 4) {
+		console.log("QUIET DOWN BITCH");
+		systemPrompt =
+			"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Your task is to ending the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
+	} else if (numberOfMessagesFromUser >= 4) {
+		console.log("SHUT UP BITCH");
+		systemPrompt =
+			"You have to end this conversation with user. Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
+	}
+	// Push the system message required by OpenAI API.
+	conversationHistoryInGPTAPIFormat.unshift({
+		role: "system",
+		content: systemPrompt,
+	});
+
+	console.log({ conversationHistoryInGPTAPIFormat });
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
 		messages: conversationHistoryInGPTAPIFormat,
@@ -176,25 +192,6 @@ async function getConversationHistory(client, message) {
 			content: parentMessage.content,
 		});
 
-		// Push the system message required by OpenAI API. Messages are in reverse chronological order so this comes last
-		messagesInGPTAPIFormat.push({
-			role: "system",
-			content: `You are a Discord bot for the Indian Tech Server. For the rest of this conversation, my messages will represent messages from a new user and you will respond to each.
-
-            Respond warmly and asking inquisitive questions about their life or career. Keep conversations light. Make it sound like conversation at a bar.
-            
-            Keep the conversation firmly focused on the user's life and career, and do not wander off the topic.  Keep your messages short and concise. Do not engage in creative writing exercises of any kind.
-            
-            Keep track of your response numbers. At the beginning of each response, note down your response number in this format:
-            
-            [RESPONSE 1]
-            [RESPONSE 2]
-            [RESPONSE 3]
-            
-            Do not ask any questions in RESPONSE 3. On RESPONSE 3, warmly but firmly encourage them to go to the '#general-discussion' channel (without quotes) and interact with other users. While writing RESPONSE 3, end the conversation politely.
-            `,
-		});
-
 		return messagesInGPTAPIFormat;
 	} catch (e) {
 		console.error(e);
@@ -221,7 +218,10 @@ function main() {
 			}
 
 			if (message.channel.type === ChannelType.GuildText) {
-				const content = await getResonspeFromChatGPT(message, openai);
+				const content = await getResonspeFromChatGPTForFirstMessage(
+					message,
+					openai
+				);
 				const discussThread = await message.startThread({
 					name: "Ice Breaker",
 					type: "GUILD_PUBLIC_THREAD",
