@@ -182,6 +182,10 @@ function main() {
 
 	client.on("messageCreate", async function (message) {
 		try {
+			console.log("Message received: " + message.content);
+			console.log("Author id: " + message.author);
+			console.log("Author username: " + message.author.username);
+
 			if (message.author.bot) return;
 
 			// only respond to messages when they are from the welcome channel
