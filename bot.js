@@ -9,12 +9,10 @@ import {
 import { Configuration, OpenAIApi } from "openai";
 import express from "express";
 
-const welcomeChannelId = "1080147198924296223";
-const botName = "GPTIceBreakerBot";
-
 function server() {
 	const port = process.env.PORT;
 	const app = express();
+
 	app.get("/", (req, res) => {
 		res.send("Bot is alive!");
 		console.log("Bot is alive!");
@@ -54,7 +52,7 @@ async function getResonspeFromChatGPT(message, openai) {
 			{
 				role: "system",
 				content:
-					"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussions channel.",
+					"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.",
 			},
 			{ role: "user", content: message.content },
 		],
@@ -77,6 +75,7 @@ async function getResonspeFromChatGPTForThread(
 }
 
 async function isMessageInWelcomeChannel(client, message) {
+	const welcomeChannelId = process.env.WELCOMECHANNELID;
 	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 
 	// if message in a channel (i.e. not in thread)
@@ -104,6 +103,8 @@ async function isMessageInWelcomeChannel(client, message) {
 }
 
 async function getConversationHistory(client, message) {
+	const botName = process.env.BOTNAME;
+	const welcomeChannelId = process.env.WELCOMECHANNELID;
 	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 	const parentMessageId = message.channel.id;
 
@@ -115,6 +116,8 @@ async function getConversationHistory(client, message) {
 		const messages = await thread.messages.fetch({ limit: 100 });
 		let messagesInGPTAPIFormat = [];
 
+		let prevRole = null;
+		// Messages are iterated in reverse chronological order. We reverse them later on.
 		for (let [_, value] of messages) {
 			// Not sure why there is one message at the end with empty content
 			if (value.content === "") continue;
@@ -126,17 +129,29 @@ async function getConversationHistory(client, message) {
 			} else {
 				//TODO: Add condition for 3rd party coming into the conversation
 			}
+
 			const newMessage = { role: role, content: value.content };
-			messagesInGPTAPIFormat.push(newMessage);
+
+			// If user has sent multiple messages subsequently, each of them are
+			// appended into single message and sent together. In this scenario,
+			// prevRole === role
+			if (prevRole === role) {
+				const numMessagesPushed = messagesInGPTAPIFormat.length;
+				prevMessage = messagesInGPTAPIFormat[numMessagesPushed - 1];
+				prevMessage.content = prevMessage.content + "." + value.content;
+			} else {
+				messagesInGPTAPIFormat.push(newMessage);
+			}
+			prevRole = role;
 		}
 
-		// Push the message that began the thread
+		// Push the message that began the thread. Messages are in reverse chronological order so this comes toward the end
 		messagesInGPTAPIFormat.push({
 			role: "user",
 			content: parentMessage.content,
 		});
 
-		// Push the system message required by OpenAI API
+		// Push the system message required by OpenAI API. Messages are in reverse chronological order so this comes last
 		messagesInGPTAPIFormat.push({
 			role: "system",
 			content:

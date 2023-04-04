@@ -2,7 +2,7 @@
 
 **Step 1**: Clone this repo.  
 **Step 2**: Add `.env` file to root folder of project.  
-**Step 3**: Add `OPENAI_API_KEY`, `BOT_TOKEN` and `PORT` fields in `.env`.
+**Step 3**: Add `OPENAI_API_KEY`, `BOT_TOKEN` and `PORT`, `WELCOMECHANNELID`, `BOTNAME` fields in `.env`.
 
 You will find `OPENAI_API_KEY` once you set up your account on openai's website and get access to their api.
 
@@ -17,6 +17,8 @@ The .env file should look like :
 OPENAI_API_KEY=XXXX
 BOT_TOKEN=YYYY
 PORT=ZZZZ
+WELCOMECHANNELID=AAAA
+BOTNAME=BBBB
 
 ```
 
@@ -26,6 +28,7 @@ PORT=ZZZZ
 npm i
 npm start
 ```
+
 ## Instructions to contribute:
 
 Submit a PR and rebase onto master.
