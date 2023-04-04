@@ -51,7 +51,8 @@ async function getResonspeFromChatGPTForFirstMessage(message, openai) {
 		messages: [
 			{
 				role: "system",
-				content: `You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.`,
+				content:
+					"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. ",
 			},
 			{ role: "user", content: message.content },
 		],
@@ -76,15 +77,20 @@ async function getResonspeFromChatGPTForThread(
 		conversationHistoryInGPTAPIFormat
 	);
 	let systemPrompt =
-		"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.";
+		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. ";
+
+	// Terminal case. After 5 user messages no more OpenAI API calls.
 	if (numberOfMessagesFromUser >= 5) {
 		return "Please head on over to #general-discussion and talk to the rest of the members. They are eagerly waiting for you!";
 	}
+	// Quiten GPT at 2-3 messages
 	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
 		console.log("QUIET DOWN BITCH");
 		systemPrompt =
-			"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Your task is to ending the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
-	} else if (numberOfMessagesFromUser >= 3) {
+			"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
+	}
+	// Absolutely shut up GPT at more than 3 (but <5) user messages
+	else if (numberOfMessagesFromUser >= 3) {
 		console.log("SHUT UP BITCH");
 		systemPrompt =
 			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
