@@ -78,14 +78,14 @@ async function getResonspeFromChatGPTForThread(
 	let systemPrompt =
 		"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.";
 
-	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 4) {
+	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
 		console.log("QUIET DOWN BITCH");
 		systemPrompt =
 			"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Your task is to ending the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
-	} else if (numberOfMessagesFromUser >= 4) {
+	} else if (numberOfMessagesFromUser >= 3) {
 		console.log("SHUT UP BITCH");
 		systemPrompt =
-			"You have to end this conversation with user. Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
+			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
 	}
 	// Push the system message required by OpenAI API.
 	conversationHistoryInGPTAPIFormat.unshift({
