@@ -77,7 +77,9 @@ async function getResonspeFromChatGPTForThread(
 	);
 	let systemPrompt =
 		"You are a greeter that responds to introductory messages by responding warmly and with some inquisitive questions. Don't meander on topics and keep everything related to technology and business. Respond to topics irrelevant to tech with a curt and short decline. Don't make it sound like an interview. Make it sound like conversation at a bar. Remember details that the user tells you. Also end the conversation by second or third message from assistant and after that direct them to mingle in #general-discussion channel.";
-
+	if (numberOfMessagesFromUser >= 5) {
+		return "Please head on over to #general-discussion and talk to the rest of the members. They are eagerly waiting for you!";
+	}
 	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
 		console.log("QUIET DOWN BITCH");
 		systemPrompt =
