@@ -74,12 +74,13 @@ async function getResonspeFromChatGPTForThread(
 	return content;
 }
 
-async function isMessageInWelcomeChannel(client, message) {
+async function willMessageBeRepliedTo(client, message) {
 	const welcomeChannelId = process.env.WELCOMECHANNELID;
 	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 
 	// if message in a channel (i.e. not in thread)
 	if (message.channel.type === ChannelType.GuildText) {
+		// if message in a channel, then it should should be in welcome channel
 		if (message.channel.id === welcomeChannelId) {
 			return true;
 		} else {
@@ -90,11 +91,22 @@ async function isMessageInWelcomeChannel(client, message) {
 	if (message.channel.type === ChannelType.PublicThread) {
 		const parentMessageId = message.channel.id;
 		try {
-			// this needs to in a try as if message not in welcomeChannel, this statement will throw an error
+			// this needs to be in a try-catch as if message not in welcomeChannel, this statement will throw an error
 			const parentMessage = await welcomeChannel.messages.fetch(
 				parentMessageId
 			);
-			if (parentMessage.channel.id === welcomeChannelId) return true;
+
+			// parent Message should be in welcome channel
+			if (parentMessage.channel.id === welcomeChannelId) {
+				// We also check if the author of this message and author of parent message match
+				if (parentMessage.author.username === message.author.username) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
 		} catch (e) {
 			// this message in thread but not in welcomeChannel
 			return false;
@@ -119,17 +131,18 @@ async function getConversationHistory(client, message) {
 		let prevRole = null;
 		// Messages are iterated in reverse chronological order. We reverse them later on.
 		for (let [_, value] of messages) {
-			// Not sure why there is one message at the end with empty content
+			// Not sure why there is one message at the end with empty content, but I'm skipping it here
 			if (value.content === "") continue;
 			let role;
+
 			if (value.author.username === botName) {
 				role = "assistant";
 			} else if (value.author.username === parentMessage.author.username) {
 				role = "user";
 			} else {
 				//TODO: Add condition for 3rd party coming into the conversation
+				continue;
 			}
-
 			const newMessage = { role: role, content: value.content };
 
 			// If user has sent multiple messages subsequently, each of them are
@@ -137,8 +150,8 @@ async function getConversationHistory(client, message) {
 			// prevRole === role
 			if (prevRole === role) {
 				const numMessagesPushed = messagesInGPTAPIFormat.length;
-				prevMessage = messagesInGPTAPIFormat[numMessagesPushed - 1];
-				prevMessage.content = prevMessage.content + "." + value.content;
+				let prevMessage = messagesInGPTAPIFormat[numMessagesPushed - 1];
+				prevMessage.content = value.content + ". " + prevMessage.content;
 			} else {
 				messagesInGPTAPIFormat.push(newMessage);
 			}
@@ -168,19 +181,17 @@ function main() {
 	const [client, openai] = init();
 
 	client.on("messageCreate", async function (message) {
-		console.log("Message received: " + message.content);
-		console.log("Author id: " + message.author);
-		console.log("Author username: " + message.author.username);
-
-		if (message.author.bot) return;
-
-		// only respond to messages when they are from the welcome channel
-		if (!(await isMessageInWelcomeChannel(client, message))) {
-			console.log("Not in welcome channel ");
-			return;
-		}
-
 		try {
+			if (message.author.bot) return;
+
+			// only respond to messages when they are from the welcome channel
+			if (!(await willMessageBeRepliedTo(client, message))) {
+				console.log(
+					"Message not in welcome channel or author not same as original thread author"
+				);
+				return;
+			}
+
 			if (message.channel.type === ChannelType.GuildText) {
 				const content = await getResonspeFromChatGPT(message, openai);
 				const discussThread = await message.startThread({
