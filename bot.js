@@ -238,10 +238,11 @@ function main() {
 					// TODO : add condition to check if error is specifically that thread already exists
 					const welcomeChannelId = process.env.WELCOMECHANNELID;
 					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
-					const parentMessageId = message.channel.id;
-					console.log({ welcomeChannelId, parentMessageId });
+					const messageId = message.id;
+					console.log({ welcomeChannelId, messageId });
+
 					const discussThread = welcomeChannel.threads.cache.find(
-						(t) => t.id === parentMessageId
+						(t) => t.id === messageId
 					);
 
 					return discussThread.send(content);
