@@ -62,18 +62,9 @@ async function getResonspeFromChatGPTForFirstMessage(message, openai) {
 }
 
 function countMessagesFromUser(conversationHistoryInGPTAPIFormat) {
-	console.log("================================================");
-	console.log("================================================");
-	console.log("================================================");
-	console.log({ conversationHistoryInGPTAPIFormat });
 	let userMessages = conversationHistoryInGPTAPIFormat.filter(
 		(c) => c.role === "user"
 	);
-	console.log("================================================");
-	console.log({ userMessages });
-	console.log("================================================");
-	console.log("================================================");
-	console.log("================================================");
 
 	return userMessages.length;
 }
@@ -87,7 +78,6 @@ async function getResonspeFromChatGPTForThread(
 	);
 	let systemPrompt =
 		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. ";
-	console.log({ numberOfMessagesFromUser });
 	// Terminal case. After 5 user messages no more OpenAI API calls.
 	if (numberOfMessagesFromUser >= 5) {
 		console.log("User has reached 5 message limit. No more API calls");
@@ -100,7 +90,9 @@ async function getResonspeFromChatGPTForThread(
 	}
 	// Absolutely shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
-		console.log("User has reached 3 message threshold");
+		console.log(
+			"User has reached 3 message threshold. Reaching limit soon ..."
+		);
 
 		systemPrompt =
 			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
@@ -172,7 +164,6 @@ async function getConversationHistory(client, message) {
 		);
 		const messages = await thread.messages.fetch({ limit: 100 });
 		let messagesInGPTAPIFormat = [];
-
 		let prevRole = null;
 		// Messages are iterated in reverse chronological order. We reverse them later on.
 		for (let [_, value] of messages) {
@@ -235,7 +226,7 @@ function main() {
 			}
 
 			if (message.channel.type === ChannelType.GuildText) {
-				console.log("MESSAGE IN CHANNEL (NOT THREAD");
+				console.log("Message in channel (not thread");
 
 				const content = await getResonspeFromChatGPTForFirstMessage(
 					message,
@@ -254,7 +245,6 @@ function main() {
 					const welcomeChannelId = process.env.WELCOMECHANNELID;
 					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 					const messageId = message.id;
-					console.log({ welcomeChannelId, messageId });
 
 					const discussThread = welcomeChannel.threads.cache.find(
 						(t) => t.id === messageId
@@ -263,7 +253,7 @@ function main() {
 					return discussThread.send(content);
 				}
 			} else if (message.channel.type === ChannelType.PublicThread) {
-				console.log("MESSAGE IN THREAD");
+				console.log("Message in thread (not channel)");
 				// feed gpt conversation history
 				const conversationHistoryInGPTAPIFormat = await getConversationHistory(
 					client,
