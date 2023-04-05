@@ -65,7 +65,6 @@ function countMessagesFromUser(conversationHistoryInGPTAPIFormat) {
 	let userMessages = conversationHistoryInGPTAPIFormat.filter(
 		(c) => c.role === "user"
 	);
-	console.log({ userMessages, length: userMessages.length });
 	return userMessages.length;
 }
 // Get response to message in thread.
@@ -85,13 +84,11 @@ async function getResonspeFromChatGPTForThread(
 	}
 	// Quiten GPT at 2-3 messages
 	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
-		console.log("QUIET DOWN BITCH");
 		systemPrompt =
 			"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
 	}
 	// Absolutely shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
-		console.log("SHUT UP BITCH");
 		systemPrompt =
 			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
 	}
@@ -101,7 +98,6 @@ async function getResonspeFromChatGPTForThread(
 		content: systemPrompt,
 	});
 
-	console.log({ conversationHistoryInGPTAPIFormat });
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
 		messages: conversationHistoryInGPTAPIFormat,
@@ -230,13 +226,26 @@ function main() {
 					message,
 					openai
 				);
-				const discussThread = await message.startThread({
-					name: "Ice Breaker",
-					type: "GUILD_PUBLIC_THREAD",
-					reason: "test",
-					autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
-				});
-				return discussThread.send(content);
+				try {
+					const discussThread = await message.startThread({
+						name: "Ice Breaker",
+						type: "GUILD_PUBLIC_THREAD",
+						reason: "test",
+						autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
+					});
+					return discussThread.send(content);
+				} catch (e) {
+					// TODO : add condition to check if error is specifically that thread already exists
+					const welcomeChannelId = process.env.WELCOMECHANNELID;
+					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
+					const parentMessageId = message.channel.id;
+					console.log({ welcomeChannelId, parentMessageId });
+					const discussThread = welcomeChannel.threads.cache.find(
+						(t) => t.id === parentMessageId
+					);
+
+					return discussThread.send(content);
+				}
 			} else if (message.channel.type === ChannelType.PublicThread) {
 				// feed gpt conversation history
 				const conversationHistoryInGPTAPIFormat = await getConversationHistory(
