@@ -225,6 +225,8 @@ function main() {
 			}
 
 			if (message.channel.type === ChannelType.GuildText) {
+				console.log("MESSAGE IN CHANNEL (NOT THREAD");
+
 				const content = await getResonspeFromChatGPTForFirstMessage(
 					message,
 					openai
@@ -251,6 +253,7 @@ function main() {
 					return discussThread.send(content);
 				}
 			} else if (message.channel.type === ChannelType.PublicThread) {
+				console.log("MESSAGE IN THREAD");
 				// feed gpt conversation history
 				const conversationHistoryInGPTAPIFormat = await getConversationHistory(
 					client,
