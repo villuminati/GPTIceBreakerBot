@@ -62,9 +62,19 @@ async function getResonspeFromChatGPTForFirstMessage(message, openai) {
 }
 
 function countMessagesFromUser(conversationHistoryInGPTAPIFormat) {
+	console.log("================================================");
+	console.log("================================================");
+	console.log("================================================");
+	console.log({ conversationHistoryInGPTAPIFormat });
 	let userMessages = conversationHistoryInGPTAPIFormat.filter(
 		(c) => c.role === "user"
 	);
+	console.log("================================================");
+	console.log({ userMessages });
+	console.log("================================================");
+	console.log("================================================");
+	console.log("================================================");
+
 	return userMessages.length;
 }
 // Get response to message in thread.
