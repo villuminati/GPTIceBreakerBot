@@ -80,6 +80,7 @@ async function getResonspeFromChatGPTForThread(
 
 	// Terminal case. After 5 user messages no more OpenAI API calls.
 	if (numberOfMessagesFromUser >= 5) {
+		console.log("User has reached 5 message limit. No more API calls");
 		return "Please head on over to #general-discussion and talk to the rest of the members. They are eagerly waiting for you!";
 	}
 	// Quiten GPT at 2-3 messages
@@ -89,6 +90,8 @@ async function getResonspeFromChatGPTForThread(
 	}
 	// Absolutely shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
+		console.log("User has reached 3 message threshold");
+
 		systemPrompt =
 			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
 	}
