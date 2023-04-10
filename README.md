@@ -1,3 +1,9 @@
+## What does this do for you?
+
+This bot acts as a greeter to new members joining a discord server. Currently it's deployed on Indian Tech Discord.
+
+It's goal is to get new members to share some things about their career and passions. It's a great way to break the ice with them.
+
 ## Instructions to run:
 
 **Step 1**: Clone this repo.  
