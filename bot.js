@@ -77,7 +77,7 @@ async function getResonspeFromChatGPTForThread(
 		conversationHistoryInGPTAPIFormat
 	);
 	let systemPrompt =
-		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. ";
+		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Here's a list ofchannels in the server: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
 	// Terminal case. After 5 user messages no more OpenAI API calls.
 	if (numberOfMessagesFromUser >= 5) {
 		console.log("User has reached 5 message limit. No more API calls");
@@ -86,7 +86,7 @@ async function getResonspeFromChatGPTForThread(
 	// Quiten GPT at 2-3 messages
 	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
 		systemPrompt =
-			"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.";
+			"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.  Here's a list ofchannels in the server: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
 	}
 	// Absolutely shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
@@ -95,7 +95,7 @@ async function getResonspeFromChatGPTForThread(
 		);
 
 		systemPrompt =
-			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly";
+			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly.  Here's a list ofchannels in the server: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
 	}
 	// Push the system message required by OpenAI API.
 	conversationHistoryInGPTAPIFormat.unshift({
