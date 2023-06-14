@@ -119,7 +119,7 @@ async function getResonspeFromChatGPTForThread(
 	return content;
 }
 
-async function willMessageBeRepliedTo(client, message) {
+async function isMessageInWelcomeChannel(client, message) {
 	const welcomeChannelId = process.env.WELCOMECHANNELID;
 	const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 
@@ -199,6 +199,7 @@ async function getConversationHistory(client, message) {
 			if (prevRole === role) {
 				const numMessagesPushed = messagesInGPTAPIFormat.length;
 				let prevMessage = messagesInGPTAPIFormat[numMessagesPushed - 1];
+
 				prevMessage.content = value.content + ". " + prevMessage.content;
 			} else {
 				messagesInGPTAPIFormat.push(newMessage);
@@ -212,7 +213,7 @@ async function getConversationHistory(client, message) {
 			content: parentMessage.content,
 		});
 
-		return messagesInGPTAPIFormat;
+		return messagesInGPTAPIFormat.reverse();
 	} catch (e) {
 		console.error(e);
 	}
@@ -230,7 +231,7 @@ function main() {
 			if (message.author.bot) return;
 
 			// only respond to messages when they are from the welcome channel
-			if (!(await willMessageBeRepliedTo(client, message))) {
+			if (!(await isMessageInWelcomeChannel(client, message))) {
 				console.log(
 					"Message not in welcome channel or author not same as original thread author"
 				);
@@ -277,7 +278,7 @@ function main() {
 				);
 
 				const content = await getResonspeFromChatGPTForThread(
-					conversationHistoryInGPTAPIFormat.reverse(),
+					conversationHistoryInGPTAPIFormat,
 					openai
 				);
 
