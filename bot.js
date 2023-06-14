@@ -73,20 +73,19 @@ async function getResonspeFromChatGPTForThread(
 	conversationHistoryInGPTAPIFormat,
 	openai
 ) {
+	const systemPrompts = [
+		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
+		"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
+		"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
+	];
+
 	const numberOfMessagesFromUser = countMessagesFromUser(
 		conversationHistoryInGPTAPIFormat
 	);
-	let systemPrompt =
-		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
 	// Terminal case. After 5 user messages no more OpenAI API calls.
 	if (numberOfMessagesFromUser >= 5) {
 		console.log("User has reached 5 message limit. No more API calls");
 		return "Please head on over to #general-discussion and talk to the rest of the members. They are eagerly waiting for you!";
-	}
-	// Quiten GPT at 2-3 messages
-	if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
-		systemPrompt =
-			"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
 	}
 	// Absolutely shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
@@ -94,14 +93,23 @@ async function getResonspeFromChatGPTForThread(
 			"User has reached 3 message threshold. Reaching limit soon ..."
 		);
 
-		systemPrompt =
-			"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6";
+		conversationHistoryInGPTAPIFormat.unshift({
+			role: "system",
+			content: systemPrompts[2],
+		});
 	}
-	// Push the system message required by OpenAI API.
-	conversationHistoryInGPTAPIFormat.unshift({
-		role: "system",
-		content: systemPrompt,
-	});
+	// Quiten GPT at 2-3 messages
+	else if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
+		conversationHistoryInGPTAPIFormat.unshift({
+			role: "system",
+			content: systemPrompts[1],
+		});
+	} else {
+		conversationHistoryInGPTAPIFormat.unshift({
+			role: "system",
+			content: systemPrompts[0],
+		});
+	}
 
 	const response = await openai.createChatCompletion({
 		model: "gpt-3.5-turbo",
@@ -241,16 +249,20 @@ function main() {
 					});
 					return discussThread.send(content);
 				} catch (e) {
-					// TODO : add condition to check if error is specifically that thread already exists
-					const welcomeChannelId = process.env.WELCOMECHANNELID;
-					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
-					const messageId = message.id;
+					// This condition happens when another bot (PyramidBot) creates a thread on the initial message before our bot can
+					if (e.code === "MessageExistingThread") {
+						const welcomeChannelId = process.env.WELCOMECHANNELID;
+						const welcomeChannel = await client.channels.fetch(
+							welcomeChannelId
+						);
+						const messageId = message.id;
 
-					const discussThread = welcomeChannel.threads.cache.find(
-						(t) => t.id === messageId
-					);
+						const discussThread = welcomeChannel.threads.cache.find(
+							(t) => t.id === messageId
+						);
 
-					return discussThread.send(content);
+						return discussThread.send(content);
+					}
 				}
 			} else if (message.channel.type === ChannelType.PublicThread) {
 				console.log("Message in thread (not channel)");
