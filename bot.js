@@ -249,7 +249,7 @@ function main() {
 					const discussThread = await message.startThread({
 						name: "Ice Breaker",
 						type: "GUILD_PUBLIC_THREAD",
-						reason: "test",
+						reason: "Thread for new member's intro",
 						autoArchiveDuration: ThreadAutoArchiveDuration.ThreeDays,
 					});
 					return discussThread.send(content);
