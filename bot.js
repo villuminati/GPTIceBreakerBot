@@ -87,7 +87,7 @@ async function getResonspeFromChatGPTForThread(
 		console.log("User has reached 5 message limit. No more API calls");
 		return "Please head on over to #general-discussion and talk to the rest of the members. They are eagerly waiting for you!";
 	}
-	// Absolutely shut up GPT at more than 3 (but <5) user messages
+	// Try to shut up GPT at more than 3 (but <5) user messages
 	else if (numberOfMessagesFromUser >= 3) {
 		console.log(
 			"User has reached 3 message threshold. Reaching limit soon ..."
@@ -144,6 +144,7 @@ async function willMessageBeRepliedTo(client, message) {
 			// parent Message should be in welcome channel
 			if (parentMessage.channel.id === welcomeChannelId) {
 				// We also check if the author of this message and author of parent message match
+				// This is done as we want to ignore 3rd person that may have entered the chat
 				if (parentMessage.author.username === message.author.username) {
 					return true;
 				} else {
@@ -153,8 +154,12 @@ async function willMessageBeRepliedTo(client, message) {
 				return false;
 			}
 		} catch (e) {
-			// this message in thread but not in welcomeChannel
-			return false;
+			const rawError = e.rawError;
+			console.log(rawError);
+			// this message is in a thread but not in welcomeChannel
+			if (rawError.code === 10008) {
+				return false;
+			}
 		}
 	}
 }
