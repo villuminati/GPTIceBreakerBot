@@ -155,7 +155,6 @@ async function willMessageBeRepliedTo(client, message) {
 			}
 		} catch (e) {
 			const rawError = e.rawError;
-			console.log(rawError);
 			// this message is in a thread but not in welcomeChannel
 			if (rawError.code === 10008) {
 				return false;
