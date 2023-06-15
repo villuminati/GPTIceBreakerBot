@@ -249,6 +249,7 @@ function main() {
 					return discussThread.send(content);
 				} catch (e) {
 					// This condition happens when another bot (PyramidBot) creates a thread on the initial message before our bot can
+					// TODO: Investigate and re-add error guard
 					const welcomeChannelId = process.env.WELCOMECHANNELID;
 					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
 					const messageId = message.id;
