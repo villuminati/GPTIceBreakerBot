@@ -97,8 +97,8 @@ async function getResonspeFromChatGPTForThread(
 			content: systemPrompts[1],
 		});
 	}
-	// Quiten GPT at 2-3 messages
-	else if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
+	// Start quitening GPT at 2 messages
+	else if (numberOfMessagesFromUser >= 2) {
 		conversationHistoryInGPTAPIFormat.unshift({
 			role: "system",
 			content: systemPrompts[0],
