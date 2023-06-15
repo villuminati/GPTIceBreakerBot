@@ -74,7 +74,6 @@ async function getResonspeFromChatGPTForThread(
 	openai
 ) {
 	const systemPrompts = [
-		"You are a Discord bot for the Indian Tech Server. Respond warmly and asking inquisitive questions about user's life or career. Keep conversations light. Make it sound like conversation at a bar. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
 		"You are a Discord bot for the Indian Tech Server. Keep the conversation firmly focused on the user's life and career, and do not wander off the topic. Make it sound like conversation at a bar. Keep your messages short and concise. Do not engage in creative writing exercises of any kind. Remember details that the user tells you. Your task is to end the conversation. Direct user to #general-discussion channel. Don't start any new conversation.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
 		"Directing user to #general-discussion channel is your only job. Don't start any new conversation. Don't continue conversation with user. Just direct user to #general-discussion firmly.  Here's a list of channels in the server to suggest to user: #⁠rules, #⁠get-roles, #⁠tech-forum, #⁠general-discussion, #⁠off-topic, #⁠sphinx-ama-ask-anything, #⁠general-jobs-and-opportunities, #⁠link-repo, #⁠showcase, #⁠meme-team-6",
 	];
@@ -95,16 +94,11 @@ async function getResonspeFromChatGPTForThread(
 
 		conversationHistoryInGPTAPIFormat.unshift({
 			role: "system",
-			content: systemPrompts[2],
+			content: systemPrompts[1],
 		});
 	}
 	// Quiten GPT at 2-3 messages
 	else if (numberOfMessagesFromUser >= 2 && numberOfMessagesFromUser < 3) {
-		conversationHistoryInGPTAPIFormat.unshift({
-			role: "system",
-			content: systemPrompts[1],
-		});
-	} else {
 		conversationHistoryInGPTAPIFormat.unshift({
 			role: "system",
 			content: systemPrompts[0],
@@ -255,19 +249,15 @@ function main() {
 					return discussThread.send(content);
 				} catch (e) {
 					// This condition happens when another bot (PyramidBot) creates a thread on the initial message before our bot can
-					if (e.code === "MessageExistingThread") {
-						const welcomeChannelId = process.env.WELCOMECHANNELID;
-						const welcomeChannel = await client.channels.fetch(
-							welcomeChannelId
-						);
-						const messageId = message.id;
+					const welcomeChannelId = process.env.WELCOMECHANNELID;
+					const welcomeChannel = await client.channels.fetch(welcomeChannelId);
+					const messageId = message.id;
 
-						const discussThread = welcomeChannel.threads.cache.find(
-							(t) => t.id === messageId
-						);
+					const discussThread = welcomeChannel.threads.cache.find(
+						(t) => t.id === messageId
+					);
 
-						return discussThread.send(content);
-					}
+					return discussThread.send(content);
 				}
 			} else if (message.channel.type === ChannelType.PublicThread) {
 				console.log("Message in thread (not channel)");
@@ -281,7 +271,6 @@ function main() {
 					conversationHistoryInGPTAPIFormat,
 					openai
 				);
-
 				return message.reply(content);
 			}
 		} catch (err) {
